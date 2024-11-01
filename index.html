@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stack Game</title>
+
+  <style>
+    body {
+      background: #000;
+      margin: 0;
+      display: grid;
+      place-content: center;
+      height: 100vh;
+    }
+
+    canvas {
+      border: 1px solid white;
+    }
+
+  </style>
+
+  <script type="module">
+    const canvas = document.querySelector('canvas')
+    const ctx = canvas.getContext('2d')
+
+    const STATES = {
+      FALL: 'fall',
+      BOUNCE: 'bounce',
+      GAMEOVER: 'gameover'
+    }
+
+    const INITIAL_BOX_WIDTH = 200
+    const INITIAL_BOX_HEIGHT = 50
+    const INITIAL_BOX_POSITION = 600
+    const INITIAL_Y_SPEED = 5
+    const INITIAL_X_SPEED = 2
+
+
+  </script>
+</head>
+<body>
+  <canvas id="canvas" width="320" height="500">
+
+  </canvas>
+</body>
+</html>
