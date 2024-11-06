@@ -36,6 +36,8 @@
     const INITIAL_Y_SPEED = 5
     const INITIAL_X_SPEED = 2
 
+    let boxes = []
+    let scrollCounter, cameraY, current, state, xSpeed, ySpeed
 
     function initializeGame () {
       boxes = [{
@@ -54,6 +56,81 @@
 
       createNewBox()
     }
+
+    function restart () {
+      initializeGame()
+      draw()
+    }
+
+    function draw () {
+      if (state === STATES.GAMEOVER) return
+
+      drawBackground()
+      drawBoxes()
+
+      if (state === STATES.BOUNCE) {
+        moveAndDetectCollision()
+
+      } else if (state === STATES.FALL) {
+        updateFallState()
+      }
+
+      window.requestAnimationFrame(draw)
+    }
+
+    function drawBackground () {
+      ctx.fillStyle = 'black'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+    }
+
+    function drawBoxes () {
+      boxes.forEach((box) => {
+        const { x, y, width, color } = box
+        const newY = INITIAL_BOX_POSITION - y
+
+        ctx.fillStyle = color
+        ctx.fillRect(x, newY, width, INITIAL_BOX_HEIGHT)
+      })
+    }
+
+    function createNewBox () {
+      boxes[current] = {
+        x: 0,
+        y: (current + 10) * INITIAL_BOX_HEIGHT,
+        width: boxes[current - 1].width,
+        color: 'white'
+      }
+    }
+
+    function updateFallState () {
+      const currentBox = boxes[current]
+      currentBox.y -= ySpeed
+    }
+
+    function moveAndDetectCollision () {
+      const currentBox = boxes[current]
+      const isMovingRightSide = xSpeed > 0
+      const isMovingLeftSide = xSpeed < 0
+      const hasHitRightSide = currentBox.x + currentBox.width > canvas.width
+      const hasHitLeftSide = currentBox.x < 0
+
+      currentBox.x += xSpeed
+
+      if ((isMovingRightSide && hasHitRightSide) || (isMovingLeftSide && hasHitLeftSide)) {
+        xSpeed *= - 1
+      }
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === ' ' && state === STATES.BOUNCE) {
+        state = STATES.FALL
+      }
+    })
+    
+
+  
+
+    restart()
 
   </script>
 </head>
