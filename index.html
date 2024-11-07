@@ -38,6 +38,17 @@
 
     let boxes = []
     let scrollCounter, cameraY, current, state, xSpeed, ySpeed
+    let debris = { x: 0, y:0, width:0}
+
+    function createStepColor (step) {
+      if (step === 0) return 'violet'
+
+      const red = Math.floor(Math.random() * 255)
+      const green = Math.floor(Math.random() * 255)
+      const blue = Math.floor(Math.random() * 255)
+
+      return `rgb(${red}, ${green}, ${blue})`
+    }
 
     function initializeGame () {
       boxes = [{
