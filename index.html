@@ -58,6 +58,7 @@
         color: 'cornflowerblue'
       }]
 
+      debris
       current = 1
       state = STATES.BOUNCE
       xSpeed = INITIAL_X_SPEED
@@ -78,6 +79,7 @@
 
       drawBackground()
       drawBoxes()
+      drawDebris()
 
       if (state === STATES.BOUNCE) {
         moveAndDetectCollision()
@@ -85,6 +87,9 @@
       } else if (state === STATES.FALL) {
         updateFallState()
       }
+
+      debris.y -=ySpeed
+      updateCamera()
 
       window.requestAnimationFrame(draw)
     }
@@ -97,7 +102,7 @@
     function drawBoxes () {
       boxes.forEach((box) => {
         const { x, y, width, color } = box
-        const newY = INITIAL_BOX_POSITION - y
+        const newY = INITIAL_BOX_POSITION - y + cameraY
 
         ctx.fillStyle = color
         ctx.fillRect(x, newY, width, INITIAL_BOX_HEIGHT)
@@ -109,13 +114,104 @@
         x: 0,
         y: (current + 10) * INITIAL_BOX_HEIGHT,
         width: boxes[current - 1].width,
-        color: 'white'
+        color: createStepColor(current)
       }
     }
 
     function updateFallState () {
       const currentBox = boxes[current]
       currentBox.y -= ySpeed
+
+      const postionPreviousBox = boxes[current - 1].y + INITIAL_BOX_HEIGHT
+
+      if (currentBox.y === postionPreviousBox) {
+        handleBoxLanding()
+      }
+    }
+
+    function handleBoxLanding () {
+      const currentBox = boxes[current]
+      const previousBox = boxes[current - 1]
+      const difference = currentBox.x - previousBox.x
+      
+      if (Math.abs(difference) >= currentBox.width) {
+        gameOver()
+        return
+      }
+
+      adjustCurrentBox(difference)
+      createNewDebris(difference)
+      
+      xSpeed += xSpeed > 0 ? 1 : -1
+      current++
+      scrollCounter = INITIAL_BOX_HEIGHT
+      state = STATES.BOUNCE
+
+      createNewBox()
+    }
+
+    function adjustCurrentBox(difference) {
+      const currentBox = boxes[current]
+      const previousBox = boxes[current - 1]
+
+      if (currentBox.x > previousBox.x){
+        currentBox.width -= difference
+      } else {
+        currentBox.width += difference
+        currentBox.x = previousBox.x
+      }
+    }
+
+    function updateCamera () {
+      if (scrollCounter > 0) {
+        cameraY++
+        scrollCounter--
+      }
+    }
+
+    function createNewDebris (difference) {
+      const currentBox = boxes[current]
+      const previousBox = boxes[current - 1]
+
+      const debrisX = currentBox.x > previousBox.x
+        ? currentBox.x + currentBox.width
+        : currentBox.x
+
+      debris = {
+        x: debrisX,
+        y: currentBox.y,
+        width: difference
+      }
+    }
+
+    function drawDebris () {
+      const { x, y, width } = debris
+      const newY = INITIAL_BOX_POSITION - y + cameraY
+
+      ctx.fillStyle = 'blue'
+      ctx.fillRect(x, newY, width, INITIAL_BOX_HEIGHT)
+    }
+
+    function gameOver () {
+      state = STATES.GAMEOVER
+
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      ctx.font = 'bold 20px Arial'
+      ctx.fillStyle = 'white'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        'Game Over',
+        canvas.width / 2,
+        canvas.height / 2
+      )
+    }
+
+    canvas.onpointerdown = () => {
+      if (state === STATES.GAMEOVER) {
+        restart()
+      }
     }
 
     function moveAndDetectCollision () {
@@ -137,6 +233,8 @@
         state = STATES.FALL
       }
     })
+
+
     
 
   
