@@ -49,51 +49,7 @@
 
       return `rgb(${red}, ${green}, ${blue})`
     }
-
-    function initializeGame () {
-      boxes = [{
-        x: canvas.width / 2 -INITIAL_BOX_WIDTH / 2,
-        y: 200,
-        width: INITIAL_BOX_WIDTH,
-        color: 'cornflowerblue'
-      }]
-
-      debris
-      current = 1
-      state = STATES.BOUNCE
-      xSpeed = INITIAL_X_SPEED
-      ySpeed = INITIAL_Y_SPEED
-      scrollCounter = 0
-      cameraY = 0
-
-      createNewBox()
-    }
-
-    function restart () {
-      initializeGame()
-      draw()
-    }
-
-    function draw () {
-      if (state === STATES.GAMEOVER) return
-
-      drawBackground()
-      drawBoxes()
-      drawDebris()
-
-      if (state === STATES.BOUNCE) {
-        moveAndDetectCollision()
-
-      } else if (state === STATES.FALL) {
-        updateFallState()
-      }
-
-      debris.y -=ySpeed
-      updateCamera()
-
-      window.requestAnimationFrame(draw)
-    }
-
+    
     function drawBackground () {
       ctx.fillStyle = 'black'
       ctx.fillRect(0, 0, canvas.width, canvas.height)
@@ -118,14 +74,75 @@
       }
     }
 
-    function updateFallState () {
+    function adjustCurrentBox(difference) {
       const currentBox = boxes[current]
-      currentBox.y -= ySpeed
+      const previousBox = boxes[current - 1]
 
-      const postionPreviousBox = boxes[current - 1].y + INITIAL_BOX_HEIGHT
+      if (currentBox.x > previousBox.x){
+        currentBox.width -= difference
+      } else {
+        currentBox.width += difference
+        currentBox.x = previousBox.x
+      }
+    }
 
-      if (currentBox.y === postionPreviousBox) {
-        handleBoxLanding()
+    function createNewDebris (difference) {
+      const currentBox = boxes[current]
+      const previousBox = boxes[current - 1]
+
+      const debrisX = currentBox.x > previousBox.x
+        ? currentBox.x + currentBox.width
+        : currentBox.x
+
+      debris = {
+        x: debrisX,
+        y: currentBox.y,
+        width: difference
+      }
+    }
+
+    function drawDebris () {
+      const { x, y, width } = debris
+      const newY = INITIAL_BOX_POSITION - y + cameraY
+
+      ctx.fillStyle = 'red'
+      ctx.fillRect(x, newY, width, INITIAL_BOX_HEIGHT)
+    }
+
+    function gameOver () {
+      state = STATES.GAMEOVER
+
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+      ctx.font = 'bold 20px Arial'
+      ctx.fillStyle = 'white'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        'Game Over',
+        canvas.width / 2,
+        canvas.height / 2
+      )
+    }
+
+    function updateCamera () {
+      if (scrollCounter > 0) {
+        cameraY++
+        scrollCounter--
+      }
+    }
+
+    function moveAndDetectCollision () {
+      const currentBox = boxes[current]
+      const isMovingRightSide = xSpeed > 0
+      const isMovingLeftSide = xSpeed < 0
+      const hasHitRightSide = currentBox.x + currentBox.width > canvas.width
+      const hasHitLeftSide = currentBox.x < 0
+
+      currentBox.x += xSpeed
+
+      if ((isMovingRightSide && hasHitRightSide) || (isMovingLeftSide && hasHitLeftSide)) {
+        xSpeed *= - 1
       }
     }
 
@@ -150,62 +167,54 @@
       createNewBox()
     }
 
-    function adjustCurrentBox(difference) {
+    function updateFallState () {
       const currentBox = boxes[current]
-      const previousBox = boxes[current - 1]
+      currentBox.y -= ySpeed
 
-      if (currentBox.x > previousBox.x){
-        currentBox.width -= difference
-      } else {
-        currentBox.width += difference
-        currentBox.x = previousBox.x
+      const postionPreviousBox = boxes[current - 1].y + INITIAL_BOX_HEIGHT
+
+      if (currentBox.y === postionPreviousBox) {
+        handleBoxLanding()
       }
     }
 
-    function updateCamera () {
-      if (scrollCounter > 0) {
-        cameraY++
-        scrollCounter--
+    function initializeGame () {
+      boxes = [{
+        x: canvas.width / 2 -INITIAL_BOX_WIDTH / 2,
+        y: 200,
+        width: INITIAL_BOX_WIDTH,
+        color: 'cornflowerblue'
+      }]
+
+      debris
+      current = 1
+      state = STATES.BOUNCE
+      xSpeed = INITIAL_X_SPEED
+      ySpeed = INITIAL_Y_SPEED
+      scrollCounter = 0
+      cameraY = 0
+
+      createNewBox()
+    }
+
+    function draw () {
+      if (state === STATES.GAMEOVER) return
+
+      drawBackground()
+      drawBoxes()
+      drawDebris()
+
+      if (state === STATES.BOUNCE) {
+        moveAndDetectCollision()
+
+      } else if (state === STATES.FALL) {
+        updateFallState()
       }
-    }
 
-    function createNewDebris (difference) {
-      const currentBox = boxes[current]
-      const previousBox = boxes[current - 1]
+      debris.y -=ySpeed
+      updateCamera()
 
-      const debrisX = currentBox.x > previousBox.x
-        ? currentBox.x + currentBox.width
-        : currentBox.x
-
-      debris = {
-        x: debrisX,
-        y: currentBox.y,
-        width: difference
-      }
-    }
-
-    function drawDebris () {
-      const { x, y, width } = debris
-      const newY = INITIAL_BOX_POSITION - y + cameraY
-
-      ctx.fillStyle = 'blue'
-      ctx.fillRect(x, newY, width, INITIAL_BOX_HEIGHT)
-    }
-
-    function gameOver () {
-      state = STATES.GAMEOVER
-
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      ctx.font = 'bold 20px Arial'
-      ctx.fillStyle = 'white'
-      ctx.textAlign = 'center'
-      ctx.fillText(
-        'Game Over',
-        canvas.width / 2,
-        canvas.height / 2
-      )
+      window.requestAnimationFrame(draw)
     }
 
     canvas.onpointerdown = () => {
@@ -214,18 +223,9 @@
       }
     }
 
-    function moveAndDetectCollision () {
-      const currentBox = boxes[current]
-      const isMovingRightSide = xSpeed > 0
-      const isMovingLeftSide = xSpeed < 0
-      const hasHitRightSide = currentBox.x + currentBox.width > canvas.width
-      const hasHitLeftSide = currentBox.x < 0
-
-      currentBox.x += xSpeed
-
-      if ((isMovingRightSide && hasHitRightSide) || (isMovingLeftSide && hasHitLeftSide)) {
-        xSpeed *= - 1
-      }
+    function restart () {
+      initializeGame()
+      draw()
     }
 
     document.addEventListener('keydown', (event) => {
@@ -233,11 +233,6 @@
         state = STATES.FALL
       }
     })
-
-
-    
-
-  
 
     restart()
 
